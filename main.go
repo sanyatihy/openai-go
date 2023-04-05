@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"time"
 
@@ -33,9 +34,18 @@ func main() {
 	apiKey := os.Getenv("OPENAI_API_KEY")
 	orgID := os.Getenv("OPENAI_ORG_ID")
 
-	client := openai.NewClient(app.logger, apiKey, orgID)
+	transport := &http.Transport{
+		MaxIdleConns:       10,
+		IdleConnTimeout:    30 * time.Second,
+		DisableCompression: false,
+	}
+	httpClient := &http.Client{
+		Transport: transport,
+	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	client := openai.NewClient(httpClient, app.logger, apiKey, orgID)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 
 	response, err := client.GetModel(ctx, "gpt-3.5-turbo")

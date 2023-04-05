@@ -6,8 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-
-	"github.com/pkg/errors"
 )
 
 func (c *openAIClient) doRequest(ctx context.Context, method, endpoint string, requestData interface{}) (*http.Response, error) {
@@ -17,13 +15,13 @@ func (c *openAIClient) doRequest(ctx context.Context, method, endpoint string, r
 	if requestData != nil {
 		reqBody, err = json.Marshal(requestData)
 		if err != nil {
-			return nil, errors.Wrap(err, "error encoding request body")
+			return nil, fmt.Errorf("error encoding request body: %w", err)
 		}
 	}
 
 	req, err := http.NewRequestWithContext(ctx, method, endpoint, bytes.NewBuffer(reqBody))
 	if err != nil {
-		return nil, errors.Wrap(err, "error creating request")
+		return nil, fmt.Errorf("error creating request: %w", err)
 	}
 
 	c.setDefaultHeaders(req)

@@ -20,6 +20,11 @@ func (c *openAIClient) ChatCompletions(ctx context.Context, requestOptions *Chat
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode == http.StatusTooManyRequests {
+		c.logger.Error("Too many requests", zap.Error(err))
+		return nil, fmt.Errorf("too many requests: %w", err)
+	}
+
 	responseBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		c.logger.Error("Error reading response body", zap.Error(err))
