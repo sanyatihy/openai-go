@@ -98,9 +98,11 @@ func TestChatCompletions(t *testing.T) {
 				},
 			},
 			mockResponse:   nil,
-			mockError:      errors.New("error making request"),
+			mockError:      errors.New("err"),
 			expectedResult: nil,
-			expectedError:  fmt.Errorf("error making request: %w", errors.New("error making request")),
+			expectedError: &InternalError{
+				Message: fmt.Sprintf("error making request: %s", errors.New("err")),
+			},
 		},
 	}
 

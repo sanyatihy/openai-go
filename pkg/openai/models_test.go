@@ -54,11 +54,13 @@ func TestGetModel(t *testing.T) {
 			expectedError: nil,
 		},
 		{
-			name:          "Error",
-			modelID:       "some-model",
-			mockResponse:  nil,
-			mockError:     errors.New("error making request"),
-			expectedError: fmt.Errorf("error making request: %w", errors.New("error making request")),
+			name:         "Error",
+			modelID:      "some-model",
+			mockResponse: nil,
+			mockError:    errors.New("err"),
+			expectedError: &InternalError{
+				Message: fmt.Sprintf("error making request: %s", errors.New("err")),
+			},
 		},
 	}
 

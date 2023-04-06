@@ -11,7 +11,7 @@ func (c *openAIClient) GetModel(ctx context.Context, modelID string) (*ModelResp
 
 	resp, err := c.doRequest(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		return nil, fmt.Errorf("error making request: %w", err)
+		return nil, err
 	}
 	defer resp.Body.Close()
 

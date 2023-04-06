@@ -14,18 +14,29 @@ func (c *openAIClient) doRequest(ctx context.Context, method, endpoint string, r
 	if requestData != nil {
 		encoder := json.NewEncoder(&reqBody)
 		if err := encoder.Encode(requestData); err != nil {
-			return nil, fmt.Errorf("error encoding request body: %w", err)
+			return nil, &InternalError{
+				Message: fmt.Sprintf("error encoding request body: %s", err),
+			}
 		}
 	}
 
 	req, err := http.NewRequestWithContext(ctx, method, endpoint, &reqBody)
 	if err != nil {
-		return nil, fmt.Errorf("error creating request: %w", err)
+		return nil, &InternalError{
+			Message: fmt.Sprintf("error creating request: %s", err),
+		}
 	}
 
 	c.setDefaultHeaders(req)
 
-	return c.httpClient.Do(req)
+	res, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, &InternalError{
+			Message: fmt.Sprintf("error making request: %s", err),
+		}
+	}
+
+	return res, nil
 }
 
 func (c *openAIClient) setDefaultHeaders(req *http.Request) {
@@ -37,7 +48,9 @@ func (c *openAIClient) setDefaultHeaders(req *http.Request) {
 func (c *openAIClient) processResponseBody(resp *http.Response, target interface{}) error {
 	decoder := json.NewDecoder(resp.Body)
 	if err := decoder.Decode(target); err != nil {
-		return fmt.Errorf("error decoding response body: %w", err)
+		return &InternalError{
+			Message: fmt.Sprintf("error decoding response body: %s", err),
+		}
 	}
 
 	return nil
@@ -48,12 +61,25 @@ func (c *openAIClient) checkStatusCode(resp *http.Response) error {
 	case http.StatusOK:
 		return nil
 	case http.StatusTooManyRequests:
-		return fmt.Errorf("too many requests: %d", resp.StatusCode)
+		return c.extractAPIError(resp)
 	case http.StatusBadRequest, http.StatusUnauthorized, http.StatusForbidden, http.StatusNotFound:
-		return fmt.Errorf("client error: %d", resp.StatusCode)
+		return c.extractAPIError(resp)
 	case http.StatusInternalServerError, http.StatusBadGateway, http.StatusServiceUnavailable, http.StatusGatewayTimeout:
-		return fmt.Errorf("server error: %d", resp.StatusCode)
+		return c.extractAPIError(resp)
 	default:
-		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+		return c.extractAPIError(resp)
 	}
+}
+
+func (c *openAIClient) extractAPIError(resp *http.Response) error {
+	var apiErrorBody struct {
+		Error APIError `json:"error"`
+	}
+
+	if err := c.processResponseBody(resp, &apiErrorBody); err != nil {
+		return err
+	}
+
+	apiErrorBody.Error.StatusCode = resp.StatusCode
+	return &apiErrorBody.Error
 }

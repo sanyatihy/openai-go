@@ -11,7 +11,7 @@ func (c *openAIClient) ChatCompletions(ctx context.Context, requestOptions *Chat
 
 	resp, err := c.doRequest(ctx, http.MethodPost, url, requestOptions)
 	if err != nil {
-		return nil, fmt.Errorf("error making request: %w", err)
+		return nil, err
 	}
 	defer resp.Body.Close()
 
