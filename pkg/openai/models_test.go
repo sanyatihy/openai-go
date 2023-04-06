@@ -9,8 +9,6 @@ import (
 	"net/http"
 	"testing"
 
-	"go.uber.org/zap"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -70,7 +68,7 @@ func TestGetModel(t *testing.T) {
 
 			mockHTTPClient.On("Do", mock.Anything).Return(tt.mockResponse, tt.mockError)
 
-			apiClient := NewClient(mockHTTPClient, zap.NewNop(), "", "")
+			apiClient := NewClient(mockHTTPClient, "", "")
 
 			response, err := apiClient.GetModel(context.Background(), tt.modelID)
 

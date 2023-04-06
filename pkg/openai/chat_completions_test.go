@@ -11,7 +11,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"go.uber.org/zap"
 )
 
 func TestChatCompletions(t *testing.T) {
@@ -111,7 +110,7 @@ func TestChatCompletions(t *testing.T) {
 
 			mockHTTPClient.On("Do", mock.Anything).Return(tt.mockResponse, tt.mockError)
 
-			mockClient := NewClient(mockHTTPClient, zap.NewNop(), "", "")
+			mockClient := NewClient(mockHTTPClient, "", "")
 
 			response, err := mockClient.ChatCompletions(context.Background(), tt.requestOptions)
 
@@ -120,7 +119,7 @@ func TestChatCompletions(t *testing.T) {
 				assert.Equal(t, tt.expectedError.Error(), err.Error())
 			} else {
 				assert.NoError(t, err)
-				assert.NotNil(t, response)
+				assert.Equal(t, tt.expectedResult, response)
 			}
 
 			mockHTTPClient.AssertCalled(t, "Do", mock.Anything)

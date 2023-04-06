@@ -2,12 +2,8 @@ package openai
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
-
-	"go.uber.org/zap"
 )
 
 func (c *openAIClient) GetModel(ctx context.Context, modelID string) (*ModelResponse, error) {
@@ -15,27 +11,17 @@ func (c *openAIClient) GetModel(ctx context.Context, modelID string) (*ModelResp
 
 	resp, err := c.doRequest(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		c.logger.Error("Error making request", zap.Error(err))
 		return nil, fmt.Errorf("error making request: %w", err)
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode == http.StatusTooManyRequests {
-		c.logger.Error("Too many requests", zap.Error(err))
-		return nil, fmt.Errorf("too many requests: %w", err)
-	}
-
-	responseBody, err := io.ReadAll(resp.Body)
-	if err != nil {
-		c.logger.Error("Error reading response body", zap.Error(err))
-		return nil, fmt.Errorf("error reading response body: %w", err)
+	if err := c.checkStatusCode(resp); err != nil {
+		return nil, err
 	}
 
 	var response ModelResponse
-	err = json.Unmarshal(responseBody, &response)
-	if err != nil {
-		c.logger.Error("Error decoding response body", zap.Error(err))
-		return nil, fmt.Errorf("error decoding response body: %w", err)
+	if err := c.processResponseBody(resp, &response); err != nil {
+		return nil, err
 	}
 
 	return &response, nil

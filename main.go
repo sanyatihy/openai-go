@@ -39,11 +39,12 @@ func main() {
 		IdleConnTimeout:    30 * time.Second,
 		DisableCompression: false,
 	}
+
 	httpClient := &http.Client{
 		Transport: transport,
 	}
 
-	client := openai.NewClient(httpClient, app.logger, apiKey, orgID)
+	client := openai.NewClient(httpClient, apiKey, orgID)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
@@ -53,5 +54,5 @@ func main() {
 		app.logger.Error("Error", zap.Error(err))
 	}
 
-	fmt.Println(response.ID)
+	app.logger.Info(fmt.Sprintf("Got response: %s", response.ID))
 }

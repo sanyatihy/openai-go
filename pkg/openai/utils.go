@@ -9,17 +9,16 @@ import (
 )
 
 func (c *openAIClient) doRequest(ctx context.Context, method, endpoint string, requestData interface{}) (*http.Response, error) {
-	var reqBody []byte
-	var err error
+	var reqBody bytes.Buffer
 
 	if requestData != nil {
-		reqBody, err = json.Marshal(requestData)
-		if err != nil {
+		encoder := json.NewEncoder(&reqBody)
+		if err := encoder.Encode(requestData); err != nil {
 			return nil, fmt.Errorf("error encoding request body: %w", err)
 		}
 	}
 
-	req, err := http.NewRequestWithContext(ctx, method, endpoint, bytes.NewBuffer(reqBody))
+	req, err := http.NewRequestWithContext(ctx, method, endpoint, &reqBody)
 	if err != nil {
 		return nil, fmt.Errorf("error creating request: %w", err)
 	}
@@ -33,4 +32,28 @@ func (c *openAIClient) setDefaultHeaders(req *http.Request) {
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.apiKey))
 	req.Header.Set("OpenAI-Organization", c.orgID)
 	req.Header.Set("Content-Type", "application/json")
+}
+
+func (c *openAIClient) processResponseBody(resp *http.Response, target interface{}) error {
+	decoder := json.NewDecoder(resp.Body)
+	if err := decoder.Decode(target); err != nil {
+		return fmt.Errorf("error decoding response body: %w", err)
+	}
+
+	return nil
+}
+
+func (c *openAIClient) checkStatusCode(resp *http.Response) error {
+	switch resp.StatusCode {
+	case http.StatusOK:
+		return nil
+	case http.StatusTooManyRequests:
+		return fmt.Errorf("too many requests: %d", resp.StatusCode)
+	case http.StatusBadRequest, http.StatusUnauthorized, http.StatusForbidden, http.StatusNotFound:
+		return fmt.Errorf("client error: %d", resp.StatusCode)
+	case http.StatusInternalServerError, http.StatusBadGateway, http.StatusServiceUnavailable, http.StatusGatewayTimeout:
+		return fmt.Errorf("server error: %d", resp.StatusCode)
+	default:
+		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+	}
 }
