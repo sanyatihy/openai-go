@@ -15,6 +15,6 @@ vet:
 	go vet ./...
 	shadow ./...
 
-.PHONY:build
-build: fmt lint vet test
-	go build -o bin/openai-go .
+.PHONY:build-examples
+build-examples:
+	go build -o bin/ ./examples/*

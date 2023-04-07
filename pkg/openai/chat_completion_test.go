@@ -13,19 +13,19 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-func TestChatCompletions(t *testing.T) {
+func TestChatCompletion(t *testing.T) {
 
 	tests := []struct {
 		name           string
-		requestOptions *ChatCompletionsRequest
+		requestOptions *ChatCompletionRequest
 		mockResponse   *http.Response
 		mockError      error
-		expectedResult *ChatCompletionsResponse
+		expectedResult *ChatCompletionResponse
 		expectedError  error
 	}{
 		{
 			name: "Success",
-			requestOptions: &ChatCompletionsRequest{
+			requestOptions: &ChatCompletionRequest{
 				Model: "some-model",
 				Messages: []Message{
 					{
@@ -60,7 +60,7 @@ func TestChatCompletions(t *testing.T) {
 				}`))),
 			},
 			mockError: nil,
-			expectedResult: &ChatCompletionsResponse{
+			expectedResult: &ChatCompletionResponse{
 				ID:      "some-model",
 				Object:  "chat.completion",
 				Created: 1677652288,
@@ -84,7 +84,7 @@ func TestChatCompletions(t *testing.T) {
 		},
 		{
 			name: "Error",
-			requestOptions: &ChatCompletionsRequest{
+			requestOptions: &ChatCompletionRequest{
 				Model: "some-model",
 				Messages: []Message{
 					{
@@ -114,7 +114,7 @@ func TestChatCompletions(t *testing.T) {
 
 			mockClient := NewClient(mockHTTPClient, "", "")
 
-			response, err := mockClient.ChatCompletions(context.Background(), tt.requestOptions)
+			response, err := mockClient.ChatCompletion(context.Background(), tt.requestOptions)
 
 			if tt.expectedError != nil {
 				assert.Error(t, err)

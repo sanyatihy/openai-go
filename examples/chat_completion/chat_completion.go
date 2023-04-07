@@ -3,34 +3,14 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"time"
 
 	"github.com/sanyatihy/openai-go/pkg/openai"
-	"go.uber.org/zap"
 )
 
-type App struct {
-	logger *zap.Logger
-}
-
-func newApp() *App {
-	logger, err := zap.NewProduction()
-	if err != nil {
-		log.Fatalf("Failed to create logger: %v", err)
-	}
-
-	return &App{
-		logger: logger,
-	}
-}
-
 func main() {
-	app := newApp()
-	defer app.logger.Sync()
-
 	apiKey := os.Getenv("OPENAI_API_KEY")
 	orgID := os.Getenv("OPENAI_ORG_ID")
 
@@ -49,10 +29,24 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 
-	response, err := client.GetModel(ctx, "gpt-3.5-turbo")
+	model := "gpt-3.5-turbo"
+	content := "Who won the world series in 2020?"
+
+	response, err := client.ChatCompletion(ctx, &openai.ChatCompletionRequest{
+		Model: model,
+		Messages: []openai.Message{
+			{
+				Role:    "user",
+				Content: content,
+			},
+		},
+		N:         1,
+		Stream:    false,
+		MaxTokens: 1024,
+	})
 	if err != nil {
-		app.logger.Error("Error", zap.Error(err))
+		fmt.Println(err)
 	}
 
-	app.logger.Info(fmt.Sprintf("Got response: %s", response.ID))
+	fmt.Println(response.Choices[0].Message.Content)
 }

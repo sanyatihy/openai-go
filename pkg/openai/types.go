@@ -1,6 +1,6 @@
 package openai
 
-type ChatCompletionsRequest struct {
+type ChatCompletionRequest struct {
 	Model            string      `json:"model"`
 	Messages         []Message   `json:"messages"`
 	Temperature      float64     `json:"temperature,omitempty"`
@@ -20,7 +20,7 @@ type Message struct {
 	Content string `json:"content"`
 }
 
-type ChatCompletionsResponse struct {
+type ChatCompletionResponse struct {
 	ID      string   `json:"id"`
 	Object  string   `json:"object"`
 	Created int64    `json:"created"`

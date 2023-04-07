@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-func (c *openAIClient) ChatCompletions(ctx context.Context, requestOptions *ChatCompletionsRequest) (*ChatCompletionsResponse, error) {
+func (c *openAIClient) ChatCompletion(ctx context.Context, requestOptions *ChatCompletionRequest) (*ChatCompletionResponse, error) {
 	url := fmt.Sprintf("%s/chat/completions", baseURL)
 
 	resp, err := c.doRequest(ctx, http.MethodPost, url, requestOptions)
@@ -19,7 +19,7 @@ func (c *openAIClient) ChatCompletions(ctx context.Context, requestOptions *Chat
 		return nil, err
 	}
 
-	var response ChatCompletionsResponse
+	var response ChatCompletionResponse
 	if err := c.processResponseBody(resp, &response); err != nil {
 		return nil, err
 	}
